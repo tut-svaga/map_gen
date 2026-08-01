@@ -2,12 +2,14 @@ const path = require('path');
 
 module.exports = {
   development: {
-    client: 'sqlite3',
+    client: 'mysql2',
     connection: {
-      filename: path.join(__dirname, 'db', 'dev.sqlite3'),
+      host: process.env.DB_HOST || '127.0.0.1',
+      port: Number(process.env.DB_PORT) || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'roadmap',
     },
-    // sqlite3 не поддерживает несколько соединений на запись — держим пул минимальным
-    useNullAsDefault: true,
     migrations: {
       directory: path.join(__dirname, 'db', 'migrations'),
     },

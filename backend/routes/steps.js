@@ -17,14 +17,15 @@ router.post('/:id/complete', async (req, res, next) => {
     const existing = await db('progress').where({ step_id: stepId }).first();
     if (existing) {
       if (existing.completed_at == null) {
+        // Передаём Date-объект: драйвер сам приведёт к формату MySQL DATETIME
         await db('progress')
           .where({ id: existing.id })
-          .update({ completed_at: new Date().toISOString() });
+          .update({ completed_at: new Date() });
       }
     } else {
       await db('progress').insert({
         step_id: stepId,
-        completed_at: new Date().toISOString(),
+        completed_at: new Date(),
       });
     }
 
