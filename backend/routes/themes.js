@@ -31,6 +31,65 @@ function toStepDto(row) {
   };
 }
 
+// GET /themes — список всех тем (для переключателя на фронте)
+router.get('/', async (req, res, next) => {
+  try {
+    const themes = await db('themes').select('id', 'name').orderBy('id', 'asc');
+    res.json(themes);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /themes — создать новую тему
+router.post('/', async (req, res, next) => {
+  try {
+    const name = (req.body.name || '').trim();
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    const [id] = await db('themes').insert({ name });
+    res.status(201).json({ id, name });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /themes/:id/steps — добавить шаг в конец темы
+router.post('/:id/steps', async (req, res, next) => {
+  try {
+    const themeId = Number(req.params.id);
+    const theme = await db('themes').where({ id: themeId }).first();
+    if (!theme) {
+      return res.status(404).json({ error: 'Theme not found' });
+    }
+
+    const title = (req.body.title || '').trim();
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    // Новый шаг встаёт в конец: order_index = максимальный в теме + 1
+    const maxRow = await db('steps')
+      .where({ theme_id: themeId })
+      .max('order_index as max')
+      .first();
+    const orderIndex = (maxRow.max || 0) + 1;
+
+    const [id] = await db('steps').insert({
+      theme_id: themeId,
+      title,
+      description: (req.body.description || '').trim() || null,
+      resource_url: (req.body.resource_url || '').trim() || null,
+      order_index: orderIndex,
+    });
+
+    res.status(201).json({ id, theme_id: themeId, title, order_index: orderIndex });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /themes/:id/steps — все шаги темы по порядку с флагом completed
 router.get('/:id/steps', async (req, res, next) => {
   try {

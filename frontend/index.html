@@ -9,7 +9,11 @@
 <body>
   <main class="container">
     <header>
-      <h1 id="theme-name">Roadmap</h1>
+      <div class="theme-row">
+        <h1 id="theme-name">Roadmap</h1>
+        <!-- Показывается только если тем больше одной -->
+        <select id="theme-select" hidden></select>
+      </div>
       <div class="progress-wrap">
         <div class="progress-bar">
           <div class="progress-fill" id="progress-fill"></div>
@@ -25,6 +29,24 @@
     <details class="all-steps">
       <summary>Все шаги</summary>
       <ol id="steps-list"></ol>
+    </details>
+
+    <details class="form-block">
+      <summary>Добавить шаг</summary>
+      <form id="add-step-form">
+        <input type="text" name="title" placeholder="Заголовок *" required />
+        <textarea name="description" placeholder="Описание" rows="3"></textarea>
+        <input type="url" name="resource_url" placeholder="Ссылка на материал (https://…)" />
+        <button type="submit">Добавить</button>
+      </form>
+    </details>
+
+    <details class="form-block">
+      <summary>Создать тему</summary>
+      <form id="create-theme-form">
+        <input type="text" name="name" placeholder="Название темы *" required />
+        <button type="submit">Создать</button>
+      </form>
     </details>
   </main>
 
