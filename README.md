@@ -74,6 +74,25 @@ npm start
 
 Откройте http://localhost:3000
 
+## Запуск бэкенда в контейнере
+
+Образ содержит и бэкенд, и статику фронтенда, поэтому **контекст сборки — корень репозитория**, а не `backend/`:
+
+```bash
+docker build -f backend/Dockerfile -t roadmap-backend .
+```
+
+MySQL при этом остаётся на хосте. Из контейнера он доступен по `host.docker.internal`
+(Docker Desktop сам проксирует это имя на хост, поэтому MySQL может слушать только `127.0.0.1`):
+
+```bash
+docker run -d --name roadmap-app -p 3001:3000 -e DB_HOST=host.docker.internal -e DB_PORT=3306 -e DB_USER=root -e DB_PASSWORD=devpass -e DB_NAME=roadmap roadmap-backend
+```
+
+Приложение будет на http://localhost:3001
+
+Миграции и сид выполняются с хоста (см. выше) — контейнер только обслуживает запросы.
+
 ## API
 
 | Метод | Путь | Описание |
