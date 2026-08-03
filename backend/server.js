@@ -1,4 +1,3 @@
-const path = require('path');
 const express = require('express');
 
 const themesRouter = require('./routes/themes');
@@ -9,8 +8,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Фронтенд раздаём как статику с того же сервера — не нужен CORS
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Статику больше не раздаём: фронтенд — отдельный сервис за nginx.
+// Этот сервис — чистый API.
 
 app.use('/themes', themesRouter);
 app.use('/steps', stepsRouter);
