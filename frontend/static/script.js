@@ -1,3 +1,7 @@
+// Бэкенд — отдельный сервис; nginx проксирует на него всё под /api,
+// срезая префикс. Поэтому здесь пути с /api, а в Express — без него.
+const API = '/api';
+
 // Текущая выбранная тема; выставляется после загрузки списка тем
 let currentThemeId = null;
 
@@ -87,7 +91,7 @@ function renderStepsList(steps) {
 // Загружает список тем, обновляет селектор и заголовок.
 // keepThemeId — какую тему оставить выбранной (например, только что созданную).
 async function loadThemes(keepThemeId) {
-  const themes = await fetchJson('/themes');
+  const themes = await fetchJson(`${API}/themes`);
 
   if (themes.length === 0) {
     currentThemeId = null;
@@ -120,9 +124,9 @@ async function loadThemes(keepThemeId) {
 async function loadThemeData() {
   if (currentThemeId == null) return;
   const [progress, currentStep, steps] = await Promise.all([
-    fetchJson(`/themes/${currentThemeId}/progress`),
-    fetchJson(`/themes/${currentThemeId}/current-step`),
-    fetchJson(`/themes/${currentThemeId}/steps`),
+    fetchJson(`${API}/themes/${currentThemeId}/progress`),
+    fetchJson(`${API}/themes/${currentThemeId}/current-step`),
+    fetchJson(`${API}/themes/${currentThemeId}/steps`),
   ]);
   renderProgress(progress);
   renderCurrentStep(currentStep, steps.length);
@@ -133,7 +137,7 @@ async function completeStep(stepId, button) {
   // Блокируем кнопку на время запроса, чтобы не отправить дубль
   button.disabled = true;
   try {
-    await postJson(`/steps/${stepId}/complete`);
+    await postJson(`${API}/steps/${stepId}/complete`);
     await loadThemeData();
   } catch (err) {
     console.error(err);
@@ -154,7 +158,7 @@ createThemeForm.addEventListener('submit', async (event) => {
   const name = createThemeForm.elements.name.value.trim();
   if (!name) return;
   try {
-    const created = await postJson('/themes', { name });
+    const created = await postJson(`${API}/themes`, { name });
     createThemeForm.reset();
     // Переключаемся на только что созданную тему
     await loadThemes(created.id);
@@ -174,7 +178,7 @@ addStepForm.addEventListener('submit', async (event) => {
   const title = addStepForm.elements.title.value.trim();
   if (!title) return;
   try {
-    await postJson(`/themes/${currentThemeId}/steps`, {
+    await postJson(`${API}/themes/${currentThemeId}/steps`, {
       title,
       description: addStepForm.elements.description.value,
       resource_url: addStepForm.elements.resource_url.value,
