@@ -8,3 +8,5 @@ node_modules
 *.log
 .claude
 *.md
+/test
+eslint.config.js
