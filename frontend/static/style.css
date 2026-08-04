@@ -22,9 +22,25 @@ body {
   gap: 1.5rem;
 }
 
+.theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
 header h1 {
   font-size: 1.5rem;
-  margin-bottom: 0.75rem;
+}
+
+#theme-select {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid #cbd2d9;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
 }
 
 .progress-wrap {
@@ -138,4 +154,57 @@ header h1 {
 
 .error {
   color: #c92a2a;
+}
+
+.empty {
+  text-align: center;
+  color: #52606d;
+}
+
+.form-block {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.form-block summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.form-block form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.form-block input,
+.form-block textarea {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  border: 1px solid #cbd2d9;
+  border-radius: 8px;
+}
+
+.form-block textarea {
+  resize: vertical;
+}
+
+.form-block button {
+  align-self: flex-start;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1c7ed6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.form-block button:hover {
+  background: #1971c2;
 }

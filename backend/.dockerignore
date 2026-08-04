@@ -1,0 +1,10 @@
+node_modules
+.env
+.env.*
+**/.env
+.git
+.idea
+.vscode
+*.log
+.claude
+*.md

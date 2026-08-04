@@ -8,8 +8,9 @@ exports.up = function up(knex) {
       .references('id')
       .inTable('steps')
       .onDelete('CASCADE');
-    // NULL = шаг ещё не выполнен; заполняется при отметке "Выполнено"
-    table.timestamp('completed_at').nullable();
+    // NULL = шаг ещё не выполнен; заполняется при отметке "Выполнено".
+    // datetime, а не timestamp: у MySQL TIMESTAMP ограничен 2038 годом
+    table.datetime('completed_at').nullable();
   });
 };
 
