@@ -13,6 +13,7 @@ const currentStepCard = document.getElementById('current-step-card');
 const stepsList = document.getElementById('steps-list');
 const createThemeForm = document.getElementById('create-theme-form');
 const addStepForm = document.getElementById('add-step-form');
+const deleteThemeBtn = document.getElementById('delete-theme-btn');
 
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
@@ -28,6 +29,14 @@ function postJson(url, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+// DELETE отвечает 204 без тела, поэтому res.json() здесь неприменим
+async function deleteRequest(url) {
+  const res = await fetch(url, { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} for ${url}`);
+  }
 }
 
 function renderProgress({ percent, completed, total }) {
@@ -97,10 +106,15 @@ async function loadThemes(keepThemeId) {
     currentThemeId = null;
     themeName.textContent = 'Roadmap';
     themeSelect.hidden = true;
+    deleteThemeBtn.hidden = true;
+    stepsList.innerHTML = '';
+    renderProgress({ percent: 0, completed: 0, total: 0 });
     currentStepCard.innerHTML =
       '<p class="empty">Тем пока нет — создайте первую через форму ниже.</p>';
     return;
   }
+
+  deleteThemeBtn.hidden = false;
 
   const found = themes.find((t) => t.id === keepThemeId);
   currentThemeId = found ? found.id : themes[0].id;
@@ -151,6 +165,25 @@ themeSelect.addEventListener('change', async () => {
   const selected = themeSelect.options[themeSelect.selectedIndex];
   themeName.textContent = selected.textContent;
   await loadThemeData();
+});
+
+deleteThemeBtn.addEventListener('click', async () => {
+  if (currentThemeId == null) return;
+  if (!confirm(`Удалить тему «${themeName.textContent}» вместе со всеми шагами?`)) {
+    return;
+  }
+  deleteThemeBtn.disabled = true;
+  try {
+    await deleteRequest(`${API}/themes/${currentThemeId}`);
+    // Тема удалена — выбор перейдёт к первой из оставшихся
+    await loadThemes();
+    await loadThemeData();
+  } catch (err) {
+    console.error(err);
+    alert('Не удалось удалить тему.');
+  } finally {
+    deleteThemeBtn.disabled = false;
+  }
 });
 
 createThemeForm.addEventListener('submit', async (event) => {

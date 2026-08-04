@@ -55,6 +55,21 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// DELETE /themes/:id — удалить тему.
+// Шаги и записи прогресса уезжают следом: у внешних ключей ON DELETE CASCADE,
+// так что чистит их база, а не приложение.
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const deleted = await db('themes').where({ id: Number(req.params.id) }).del();
+    if (deleted === 0) {
+      return res.status(404).json({ error: 'Theme not found' });
+    }
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /themes/:id/steps — добавить шаг в конец темы
 router.post('/:id/steps', async (req, res, next) => {
   try {

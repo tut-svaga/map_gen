@@ -43,6 +43,20 @@ header h1 {
   cursor: pointer;
 }
 
+.delete-theme {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1px solid #f1aeb5;
+  border-radius: 8px;
+  background: #fff;
+  color: #c92a2a;
+  cursor: pointer;
+}
+
+.delete-theme:hover {
+  background: #fff5f5;
+}
+
 .progress-wrap {
   display: flex;
   align-items: center;

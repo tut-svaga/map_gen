@@ -54,8 +54,11 @@
 
 ```
 backend/
-  server.js            # входная точка Express
+  app.js               # Express-приложение (экспортируется, слушает не оно)
+  server.js            # точка входа: поднимает HTTP-сервер
   db.js                # инстанс knex
+  eslint.config.js     # конфиг линтера
+  test/                # тесты API поверх реальной MySQL
   knexfile.js          # конфиг подключения к MySQL, только из переменных окружения
   routes/              # роуты API
   db/migrations/       # миграции (themes, steps, progress)
@@ -195,11 +198,39 @@ ClusterIP-сервис не виден за пределами кластера.
 |-------|------|----------|
 | GET | `/themes` | Список всех тем |
 | POST | `/themes` | Создать тему (body: `{ name }`) |
+| DELETE | `/themes/:id` | Удалить тему; шаги и прогресс уезжают каскадом |
 | GET | `/themes/:id/steps` | Все шаги темы по порядку, с флагом `completed` |
 | GET | `/themes/:id/current-step` | Первый невыполненный шаг (`null`, если всё выполнено) |
 | POST | `/themes/:id/steps` | Добавить шаг в конец темы (body: `{ title, description, resource_url }`) |
 | POST | `/steps/:id/complete` | Отметить шаг выполненным (идемпотентно) |
 | GET | `/themes/:id/progress` | `{ total, completed, percent }` |
+
+## Линтер и тесты
+
+```bash
+cd backend
+npm install          # включая devDependencies
+npm run lint
+npm test
+```
+
+Тесты работают поверх настоящей MySQL, а не моков: проверяется в том числе
+поведение внешних ключей (каскадное удаление) и идемпотентность отметки шага.
+Схему они накатывают сами через `db.migrate.latest()`, отдельный шаг миграции
+не нужен.
+
+Перед каждым кейсом таблицы очищаются, поэтому есть предохранитель: если
+`DB_NAME` не содержит `test`, запуск прерывается. Боевую базу тестами не снести.
+
+Локально базу для тестов удобно поднимать отдельным контейнером с
+опубликованным портом — рабочий `cont-mysql` наружу не смотрит:
+
+```bash
+docker run -d --name mysql-test -p 3307:3306 \
+  -e MYSQL_ROOT_PASSWORD=testpass -e MYSQL_DATABASE=roadmap_test mysql:8.0
+
+DB_HOST=127.0.0.1 DB_PORT=3307 DB_USER=root DB_PASSWORD=testpass DB_NAME=roadmap_test npm test
+```
 
 ## Отладка
 
