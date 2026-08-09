@@ -2,13 +2,13 @@
   "name": "roadmap-tracker-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend for personal roadmap progress tracker (MVP)",
+  "description": "Backend for personal roadmap progress tracker and freeze tracker",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "lint": "eslint .",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=1",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "seed": "knex seed:run"

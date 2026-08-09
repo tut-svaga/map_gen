@@ -1,0 +1,262 @@
+/* Токены и базовые примитивы. Всё, что переиспользуется больше чем в одном
+   месте (кнопка, поле, карточка, «надбровка»), живёт здесь глобально;
+   остальное — в CSS-модулях рядом с компонентами. */
+
+:root {
+  /* Поверхности */
+  --ink: #0b1116;
+  --ink-2: #0e1720;
+  --slab: #131e27;
+  --slab-2: #17242f;
+  --line: #223440;
+  --line-soft: rgba(232, 238, 242, 0.07);
+
+  /* Текст */
+  --frost: #e8eef2;
+  --mute: #7e97a8;
+  --dim: #48606e;
+
+  /* Акценты: тёплый — заморозка и действие, холодный — прогресс и выполненное */
+  --ember: #e2582b;
+  --ember-dim: #6b2e1c;
+  --ember-soft: rgba(226, 88, 43, 0.14);
+  --ice: #3fc1d9;
+  --ice-dim: #1d5866;
+  --ice-soft: rgba(63, 193, 217, 0.12);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 18px;
+
+  --shadow: 0 22px 48px -28px rgba(0, 0, 0, 0.95);
+  --shadow-lift: 0 26px 60px -30px rgba(0, 0, 0, 1);
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--frost);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--ice);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.16s ease;
+}
+
+a:hover {
+  border-bottom-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--frost);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --- примитивы ------------------------------------------------------------ */
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.card {
+  position: relative;
+  background: linear-gradient(180deg, var(--slab-2), var(--slab));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Тонкая световая кромка сверху: без неё карточка на тёмном фоне выглядит
+   плоской наклейкой, а не поверхностью. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(90deg, transparent, var(--line-soft) 30%, var(--line-soft) 70%, transparent);
+  pointer-events: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--ink-2);
+  color: var(--frost);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--mute);
+  background: var(--slab-2);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #f0663a;
+  border-color: #f0663a;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--mute);
+  padding: 8px 12px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--ink-2);
+  border-color: var(--line);
+  color: var(--frost);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--ember);
+  color: var(--ember);
+  background: var(--ember-soft);
+}
+
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.field {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--frost);
+  font: inherit;
+  font-size: 15px;
+  transition: border-color 0.16s ease;
+}
+
+.field::placeholder {
+  color: var(--dim);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--mute);
+}
+
+textarea.field {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.muted {
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Скрываем полосу прокрутки там, где она перебивает вёрстку (лента дней,
+   ряд тем), сохраняя саму прокрутку. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

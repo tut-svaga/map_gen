@@ -13,22 +13,31 @@ if (missing.length > 0) {
   );
 }
 
-module.exports = {
-  development: {
-    client: 'mysql2',
-    connection: {
-      host: process.env.DB_HOST,
-      // Порт — не секрет и не зависит от окружения, 3306 стандартный
-      port: Number(process.env.DB_PORT) || 3306,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    },
-    migrations: {
-      directory: path.join(__dirname, 'db', 'migrations'),
-    },
-    seeds: {
-      directory: path.join(__dirname, 'db', 'seeds'),
-    },
+const config = {
+  client: 'mysql2',
+  connection: {
+    host: process.env.DB_HOST,
+    // Порт — не секрет и не зависит от окружения, 3306 стандартный
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   },
+  migrations: {
+    directory: path.join(__dirname, 'db', 'migrations'),
+  },
+  seeds: {
+    directory: path.join(__dirname, 'db', 'seeds'),
+  },
+};
+
+// Один и тот же конфиг под всеми окружениями. Отличия между dev, test и prod
+// целиком задаются переменными окружения — держать три копии одинаковых
+// блоков значит однажды поправить один и забыть про остальные.
+// Ключи перечислены явно: в образе стоит NODE_ENV=production, и раньше
+// knexConfig[environment] возвращал undefined, а контейнер падал на старте.
+module.exports = {
+  development: config,
+  test: config,
+  production: config,
 };

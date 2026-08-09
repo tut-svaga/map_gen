@@ -1,0 +1,178 @@
+.shell {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+/* Фоновое свечение. Два размытых пятна вместо картинки: весит ноль,
+   масштабируется под любой экран и не мешает читать текст поверх. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aurora::before,
+.aurora::after {
+  content: '';
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+
+.aurora::before {
+  top: -22vmax;
+  left: -14vmax;
+  background: radial-gradient(circle, rgba(226, 88, 43, 0.22), transparent 62%);
+  animation: drift-warm 26s ease-in-out infinite alternate;
+}
+
+.aurora::after {
+  right: -18vmax;
+  bottom: -26vmax;
+  background: radial-gradient(circle, rgba(63, 193, 217, 0.16), transparent 62%);
+  animation: drift-cold 32s ease-in-out infinite alternate;
+}
+
+@keyframes drift-warm {
+  to {
+    transform: translate3d(12vmax, 8vmax, 0) scale(1.15);
+  }
+}
+
+@keyframes drift-cold {
+  to {
+    transform: translate3d(-10vmax, -8vmax, 0) scale(1.1);
+  }
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--line-soft);
+  background: rgba(11, 17, 22, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.topbarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 14px 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.brandMark {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+}
+
+.brandText {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.brandText span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ink-2);
+}
+
+.tab {
+  position: relative;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--mute);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.tab:hover {
+  color: var(--frost);
+}
+
+.tab[aria-selected='true'] {
+  color: var(--frost);
+}
+
+/* Подложка активной вкладки — отдельный слой под текстом: её двигает
+   framer-motion через layoutId, поэтому она не может быть фоном кнопки.
+   z-index не используем: у обоих элементов auto, и порядок отрисовки задаёт
+   порядок в DOM — подложка идёт первой. С z-index: -1 подложка уехала бы
+   за фон .tabs, потому что кнопка не создаёт контекст наложения. */
+.tabPill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--slab-2);
+  border: 1px solid var(--line);
+}
+
+.tabLabel {
+  position: relative;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+@media (max-width: 620px) {
+  .topbarInner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .tabs {
+    justify-content: center;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 9px 12px;
+  }
+
+  .main {
+    padding: 24px 16px 72px;
+  }
+}

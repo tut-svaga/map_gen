@@ -155,3 +155,146 @@ test('прогресс пустой темы не делит на ноль', asy
   const res = await request(app).get(`/themes/${themeId}/progress`).expect(200);
   assert.deepEqual(res.body, { total: 0, completed: 0, percent: 0 });
 });
+
+test('список тем несёт счётчики шагов', async () => {
+  const themeId = await createTheme('Со счётчиками');
+  const first = await addStep(themeId, 'Первый');
+  await addStep(themeId, 'Второй');
+  await request(app).post(`/steps/${first}/complete`).expect(200);
+
+  // Тема без шагов не должна выпасть из списка из-за GROUP BY
+  await createTheme('Пустая');
+
+  const res = await request(app).get('/themes').expect(200);
+  assert.deepEqual(
+    res.body.map((t) => [t.name, t.total, t.completed, t.percent]),
+    [
+      ['Со счётчиками', 2, 1, 50],
+      ['Пустая', 0, 0, 0],
+    ]
+  );
+});
+
+test('PATCH /themes/:id переименовывает тему', async () => {
+  const themeId = await createTheme('Старое имя');
+
+  const res = await request(app).patch(`/themes/${themeId}`).send({ name: ' Новое ' }).expect(200);
+  assert.equal(res.body.name, 'Новое');
+
+  await request(app).patch(`/themes/${themeId}`).send({ name: '  ' }).expect(400);
+  await request(app).patch('/themes/999999').send({ name: 'x' }).expect(404);
+});
+
+test('кривой id темы — 400, а не 500', async () => {
+  await request(app).delete('/themes/abc').expect(400);
+  await request(app).get('/themes/abc/steps').expect(400);
+});
+
+test('PATCH /steps/:id меняет только присланные поля', async () => {
+  const themeId = await createTheme();
+  const stepId = await addStep(themeId, 'Заголовок');
+  await request(app)
+    .patch(`/steps/${stepId}`)
+    .send({ description: 'описание', resource_url: 'https://example.com' })
+    .expect(200);
+
+  const res = await request(app).patch(`/steps/${stepId}`).send({ title: 'Другой' }).expect(200);
+  assert.equal(res.body.title, 'Другой');
+  // Поля, которых не было в теле, остались нетронутыми
+  assert.equal(res.body.description, 'описание');
+  assert.equal(res.body.resource_url, 'https://example.com');
+
+  // Пустая строка — это «сотри», в отличие от отсутствующего ключа
+  const cleared = await request(app).patch(`/steps/${stepId}`).send({ description: '' }).expect(200);
+  assert.equal(cleared.body.description, null);
+
+  await request(app).patch(`/steps/${stepId}`).send({ title: '   ' }).expect(400);
+  await request(app).patch(`/steps/${stepId}`).send({}).expect(400);
+  await request(app).patch('/steps/999999').send({ title: 'x' }).expect(404);
+});
+
+test('DELETE /steps/:id удаляет шаг вместе с прогрессом', async () => {
+  const themeId = await createTheme();
+  const stepId = await addStep(themeId, 'Уйдёт');
+  await request(app).post(`/steps/${stepId}/complete`).expect(200);
+
+  await request(app).delete(`/steps/${stepId}`).expect(204);
+  await request(app).delete(`/steps/${stepId}`).expect(404);
+
+  const rows = await db('progress').where({ step_id: stepId });
+  assert.equal(rows.length, 0, 'каскад должен был убрать запись прогресса');
+
+  const res = await request(app).get(`/themes/${themeId}/progress`).expect(200);
+  assert.deepEqual(res.body, { total: 0, completed: 0, percent: 0 });
+});
+
+test('отметку выполнения можно снять', async () => {
+  const themeId = await createTheme();
+  const stepId = await addStep(themeId, 'Туда-обратно');
+
+  await request(app).post(`/steps/${stepId}/complete`).expect(200);
+  await request(app).delete(`/steps/${stepId}/complete`).expect(200);
+
+  const rows = await db('progress').where({ step_id: stepId });
+  assert.equal(rows.length, 0, 'снятие отметки удаляет строку прогресса целиком');
+
+  const res = await request(app).get(`/themes/${themeId}/current-step`).expect(200);
+  assert.equal(res.body.id, stepId, 'шаг снова стал текущим');
+
+  // Снимать уже снятое можно сколько угодно
+  await request(app).delete(`/steps/${stepId}/complete`).expect(200);
+  await request(app).delete('/steps/999999/complete').expect(404);
+});
+
+test('шаг двигается вверх и вниз, с краю никуда не двигается', async () => {
+  const themeId = await createTheme();
+  const first = await addStep(themeId, 'Первый');
+  const second = await addStep(themeId, 'Второй');
+  const third = await addStep(themeId, 'Третий');
+
+  const order = async () => {
+    const res = await request(app).get(`/themes/${themeId}/steps`).expect(200);
+    return res.body.map((s) => s.title);
+  };
+
+  let res = await request(app).post(`/steps/${third}/move`).send({ direction: 'up' }).expect(200);
+  assert.equal(res.body.moved, true);
+  assert.deepEqual(await order(), ['Первый', 'Третий', 'Второй']);
+
+  await request(app).post(`/steps/${first}/move`).send({ direction: 'down' }).expect(200);
+  assert.deepEqual(await order(), ['Третий', 'Первый', 'Второй']);
+
+  res = await request(app).post(`/steps/${third}/move`).send({ direction: 'up' }).expect(200);
+  assert.equal(res.body.moved, false, 'верхний шаг двигать некуда');
+  assert.deepEqual(await order(), ['Третий', 'Первый', 'Второй']);
+
+  await request(app).post(`/steps/${second}/move`).send({ direction: 'sideways' }).expect(400);
+});
+
+test('перестановка не задевает соседние темы', async () => {
+  const themeA = await createTheme('A');
+  const themeB = await createTheme('B');
+  await addStep(themeA, 'A1');
+  const a2 = await addStep(themeA, 'A2');
+  await addStep(themeB, 'B1');
+  await addStep(themeB, 'B2');
+
+  await request(app).post(`/steps/${a2}/move`).send({ direction: 'up' }).expect(200);
+
+  const res = await request(app).get(`/themes/${themeB}/steps`).expect(200);
+  assert.deepEqual(
+    res.body.map((s) => s.title),
+    ['B1', 'B2']
+  );
+});
+
+test('служебные ручки и неизвестный путь отвечают JSON', async () => {
+  const health = await request(app).get('/health').expect(200);
+  assert.deepEqual(health.body, { status: 'ok' });
+
+  const ready = await request(app).get('/ready').expect(200);
+  assert.deepEqual(ready.body, { status: 'ready' });
+
+  const missing = await request(app).get('/nope').expect(404);
+  assert.ok(missing.body.error, 'у 404 должно быть JSON-тело, а не HTML Express');
+});

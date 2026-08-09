@@ -1,0 +1,365 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- герой ---------------------------------------------------------------- */
+
+.hero {
+  overflow: hidden;
+}
+
+.count {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 12px;
+  font-family: var(--mono);
+}
+
+.countNumber {
+  font-size: clamp(48px, 12vw, 72px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.countUnit {
+  font-size: 15px;
+  color: var(--mute);
+}
+
+.heroText {
+  margin-top: 14px;
+  max-width: 48ch;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.timeline {
+  position: relative;
+  height: 4px;
+  margin-top: 20px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.timelineFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ember-dim), var(--ember));
+}
+
+.timelineLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+/* --- лента дней ----------------------------------------------------------- */
+
+.strip {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  padding: 4px 2px 6px;
+  overflow-x: auto;
+}
+
+.tick {
+  flex: 1 0 6px;
+  min-width: 6px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: #1b2833;
+  transition:
+    background 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.tick:hover {
+  transform: scaleY(1.1);
+  background: #24353f;
+}
+
+/* Будущее приглушено: отмечать вперёд нечего, и лента не должна намекать,
+   будто там уже что-то есть. */
+.tick[data-future='true'] {
+  background: #16202a;
+  height: 34px;
+}
+
+.tick[data-weekend='true'] {
+  opacity: 0.75;
+}
+
+.tick[data-state='worked'] {
+  background: var(--ember);
+}
+
+.tick[data-state='idle'] {
+  background: var(--ember-dim);
+}
+
+.tick[data-state='open'] {
+  background: var(--ice-dim);
+}
+
+.tick[data-today='true'] {
+  box-shadow: 0 0 0 1px var(--frost);
+}
+
+.tick[aria-pressed='true'] {
+  transform: scaleY(1.22);
+  box-shadow: 0 0 0 1px var(--mute);
+}
+
+.tick[data-today='true'][aria-pressed='true'] {
+  box-shadow: 0 0 0 1px var(--frost);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mute);
+}
+
+.statValue {
+  color: var(--frost);
+}
+
+/* --- карточка дня --------------------------------------------------------- */
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dayLabel {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--frost);
+}
+
+.pair {
+  display: flex;
+  gap: 10px;
+}
+
+.big {
+  flex: 1;
+  padding: 15px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--ink-2);
+  color: var(--frost);
+  font-size: 15px;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.big:hover {
+  border-color: var(--mute);
+}
+
+.big[aria-pressed='true'] {
+  background: var(--ember);
+  border-color: var(--ember);
+  color: #fff;
+}
+
+.bigNo[aria-pressed='true'] {
+  background: transparent;
+  border-color: var(--ember-dim);
+  color: var(--mute);
+}
+
+.dayActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.saveHint {
+  margin-left: auto;
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+/* --- списки --------------------------------------------------------------- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--mute);
+  border-radius: 50%;
+  background: none;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.dot:hover {
+  border-color: var(--frost);
+}
+
+.dot[aria-pressed='true'] {
+  border-color: var(--ember);
+  background: var(--ember);
+}
+
+.dotCheck {
+  width: 11px;
+  height: 11px;
+  color: #fff;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.itemText {
+  cursor: text;
+}
+
+.itemText[data-done='true'] {
+  color: var(--mute);
+  text-decoration: line-through;
+}
+
+.when {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.kill {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--dim);
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
+}
+
+.kill:hover {
+  background: var(--ink-2);
+  color: var(--ember);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.row .field {
+  flex: 1;
+}
+
+.empty {
+  padding: 4px 0;
+  color: var(--mute);
+  font-size: 14px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.reset {
+  border: 0;
+  background: none;
+  color: var(--dim);
+  font: inherit;
+  text-decoration: underline;
+}
+
+.reset:hover {
+  color: var(--ember);
+}
+
+.skeleton {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--slab-2), var(--line), var(--slab-2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .pair {
+    flex-direction: column;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+}

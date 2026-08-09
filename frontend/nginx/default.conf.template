@@ -1,0 +1,89 @@
+# Шаблон, а не готовый конфиг: штатный entrypoint образа nginx прогоняет
+# /etc/nginx/templates/*.template через envsubst и кладёт результат в
+# /etc/nginx/conf.d/. Подставляются только реальные переменные окружения,
+# поэтому $host, $uri и прочие переменные самого nginx остаются нетронутыми.
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Версию nginx в заголовках и на страницах ошибок показывать незачем:
+    # это бесплатная подсказка тому, кто подбирает эксплойт под версию.
+    server_tokens off;
+
+    # Загружать в статику нечего, а большой лимит — лишняя поверхность для
+    # атаки. Тела запросов здесь — только JSON на пару килобайт.
+    client_max_body_size 256k;
+
+    include /etc/nginx/snippets/security-headers.conf;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # --- API ------------------------------------------------------------------
+    # Слэш в конце proxy_pass срезает префикс /api: наружу /api/themes,
+    # в Express приходит /themes.
+    #
+    # Адрес подставляется на старте контейнера и дальше не перечитывается:
+    # nginx резолвит DNS-имя один раз при загрузке конфига. Если бэкенд
+    # переедет на другой IP (пересоздание контейнера, новый под), обращения
+    # продолжат идти на старый адрес до перезапуска nginx. Лечится переменной
+    # в proxy_pass вместе с директивой resolver — но адрес резолвера свой
+    # в docker (127.0.0.11) и свой в кластере, поэтому выбор за тем,
+    # кто раскатывает.
+    location /api/ {
+        proxy_pass ${BACKEND_UPSTREAM}/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+    }
+
+    # --- статика --------------------------------------------------------------
+    # У собранных Vite файлов хеш в имени: меняется содержимое — меняется имя.
+    # Поэтому их можно кэшировать навсегда, не боясь отдать старую версию.
+    location /assets/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        # Одной директивой, а не expires + add_header: те выставляют
+        # Cache-Control дважды, и в ответе оказываются два разных заголовка.
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # index.html, наоборот, кэшировать нельзя: именно он знает, какие
+    # хешированные файлы сейчас актуальны. Закэшированный — навсегда
+    # приколотит браузер к предыдущему релизу.
+    # Сюда попадает и запрос на «/», и SPA-фолбэк: try_files делает внутренний
+    # редирект, а он заново подбирает location. Поэтому сниппет нужен и здесь.
+    location = /index.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # Своя проверка живости фронтенд-контейнера, не зависящая от бэкенда
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # SPA: маршруты вида /#/freeze живут в hash и до сервера не доходят, но
+    # прямой заход на любой несуществующий путь должен отдавать приложение,
+    # а не 404 — иначе оно не переживёт добавления обычного роутера.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
